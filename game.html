@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minion Chase - Heavy Weapon Style</title>
+  <script src="audio-global-manager.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 100%;
+      height: 100vh;
+      overflow: hidden;
+      background: #000;
+      font-family: Arial, sans-serif;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: calc(100% - 70px);
+    }
+
+    .hud {
+      width: 100%;
+      height: 70px;
+      background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 20px;
+      border-top: 2px solid #ff6b4a;
+      color: #fff;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    .hud-left {
+      display: flex;
+      gap: 30px;
+    }
+
+    .hud-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hud-value {
+      color: #ffff00;
+      text-shadow: 0 0 10px rgba(255, 255, 0, 0.5);
+    }
+
+    .hud-right {
+      display: flex;
+      gap: 15px;
+    }
+
+    button {
+      padding: 10px 20px;
+      background: linear-gradient(135deg, #ff6b4a 0%, #ff8c5a 100%);
+      color: #fff;
+      border: 2px solid #ff6b4a;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s ease;
+      font-size: 14px;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(255, 107, 74, 0.4);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    #combo {
+      color: #ffaa00;
+      text-shadow: 0 0 10px rgba(255, 170, 0, 0.8);
+      font-size: 18px;
+    }
+
+    /* ========== PAUSE MODAL ========== */
+    .pause-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: blur(4px);
+    }
+
+    .pause-modal.active {
+      display: flex;
+    }
+
+    .pause-content {
+      background: linear-gradient(135deg, rgba(15, 23, 36, 0.95) 0%, rgba(7, 16, 42, 0.95) 100%);
+      border: 3px solid #00ffff;
+      border-radius: 20px;
+      padding: 50px;
+      text-align: center;
+      box-shadow: 0 0 50px rgba(0, 255, 255, 0.6);
+      animation: slideIn 0.3s ease-out;
+      max-width: 500px;
+      width: 90%;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: scale(0.8);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .pause-content h1 {
+      font-size: 48px;
+      color: #00ffff;
+      text-shadow: 0 0 30px #00ffff;
+      margin-bottom: 40px;
+      letter-spacing: 2px;
+    }
+
+    .pause-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .pause-btn {
+      padding: 18px 40px;
+      font-size: 18px;
+      font-weight: bold;
+      border: 2px solid;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .pause-btn-resume {
+      background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+      color: #fff;
+      border-color: #00ff88;
+    }
+
+    .pause-btn-resume:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(76, 175, 80, 0.6);
+    }
+
+    .pause-btn-menu {
+      background: linear-gradient(135deg, #2196F3 0%, #0b7dda 100%);
+      color: #fff;
+      border-color: #00ffff;
+    }
+
+    .pause-btn-menu:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(33, 150, 243, 0.6);
+    }
+
+    .pause-btn-restart {
+      background: linear-gradient(135deg, #FF9800 0%, #e68900 100%);
+      color: #fff;
+      border-color: #ffaa00;
+    }
+
+    .pause-btn-restart:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(255, 152, 0, 0.6);
+    }
+
+    /* ========== GAME OVER MODAL ========== */
+      .gameover-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 2000;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(5px);
+    animation: fadeInOverlay 0.5s ease-out;
+  }
+
+    .gameover-modal.active {
+    display: flex;
+  }
+
+    @keyframes fadeInOverlay {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    .gameover-content {
+      background: linear-gradient(135deg, rgba(40, 15, 15, 0.98) 0%, rgba(15, 5, 5, 0.98) 100%);
+      border: 4px solid #ff3333;
+      border-radius: 25px;
+      padding: 30px 20px;
+      text-align: center;
+      box-shadow: 0 0 80px rgba(255, 50, 50, 0.8), inset 0 0 30px rgba(255, 100, 100, 0.2);
+      animation: popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+      max-width: 550px;
+      width: 95%;
+    }
+
+    @keyframes popIn {
+      0% {
+        opacity: 0;
+        transform: scale(0.6) rotateX(-20deg);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1) rotateX(0);
+      }
+    }
+
+    .gameover-header {
+      margin-bottom: 25px;
+    }
+
+    .gameover-content h1 {
+      color: #ff3333;
+      font-size: 56 px;
+      font-weight: bold;
+      margin-bottom: 8px;
+      text-shadow: 0 0 30px #ff3333, 0 0 60px #ff0000;
+      letter-spacing: 4px;
+      animation: pulseText 1s infinite;
+    }
+
+    @keyframes pulseText {
+      0%, 100% {
+        text-shadow: 0 0 30px #ff3333, 0 0 60px #ff0000;
+      }
+      50% {
+        text-shadow: 0 0 50px #ff3333, 0 0 80px #ff3333;
+      }
+    }
+
+    .gameover-content h2 {
+      color: #ffaa00;
+      font-size: 20px;
+      margin-bottom: 8px;
+      text-shadow: 0 0 15px #ffaa00;
+      letter-spacing: 2px;
+    }
+
+    .gameover-stats {
+      background: linear-gradient(135deg, rgba(0, 0, 0, 0.6) 0%, rgba(20, 10, 10, 0.6) 100%);
+      border: 2px solid rgba(255, 51, 51, 0.5);
+      border-radius: 15px;
+      padding: 20px;
+      margin: 20px 0;
+      backdrop-filter: blur(5px);
+    }
+
+    .final-score {
+      color: #ffff00;
+      font-size: 32px;
+      font-weight: bold;
+      margin-bottom: 15px;
+      text-shadow: 0 0 15px #ffff00;
+      letter-spacing: 1px;
+    }
+
+    .final-score-label {
+      color: #ffaa00;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .stat-box {
+      background: rgba(0, 255, 136, 0.05);
+      border: 1px solid rgba(0, 255, 136, 0.3);
+      border-radius: 8px;
+      padding: 10px;
+      transition: all 0.3s ease;
+    }
+
+    .stat-box:hover {
+      background: rgba(0, 255, 136, 0.1);
+      border-color: rgba(0, 255, 136, 0.6);
+      transform: scale(1.05);
+    }
+
+    .stat-box-label {
+      color: #aabbcc;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+
+    .stat-box-value {
+      color: #00ff88;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .high-score-section {
+      background: rgba(255, 215, 0, 0.1);
+      border: 2px solid rgba(255, 215, 0, 0.5);
+      border-radius: 10px;
+      padding: 12px;
+      margin-top: 15px;
+    }
+
+    .high-score-text {
+      color: #ffaa00;
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+
+    .high-score-value {
+      color: #ffff00;
+      font-size: 24px;
+      font-weight: bold;
+      text-shadow: 0 0 10px #ffff00;
+    }
+
+    .high-score-badge {
+      color: #00ff88;
+      font-size: 14px;
+      margin-top: 8px;
+      animation: bounce 1s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-5px);
+      }
+    }
+
+    .gameover-buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 25px;
+      flex-wrap: wrap;
+    }
+
+    .gameover-btn {
+      padding: 12px 30px;
+      font-size: 14px;
+      font-weight: bold;
+      border: 2px solid;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      min-width: auto;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .gameover-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.3);
+      transition: left 0.5s ease;
+      z-index: -1;
+    }
+
+    .gameover-btn:hover::before {
+      left: 100%;
+    }
+
+    .gameover-btn-restart {
+      background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+      color: #fff;
+      border-color: #00ff88;
+      box-shadow: 0 0 15  px rgba(76, 175, 80, 0.5);
+    }
+
+    .gameover-btn-restart:hover {
+      transform: translateY(-3px) scale(1.08);
+      box-shadow: 0 8px 30px rgba(76, 175, 80, 0.8);
+    }
+
+    .gameover-btn-restart:active {
+      transform: translateY(-2px) scale(1.03);
+    }
+
+    .gameover-btn-menu {
+      background: linear-gradient(135deg, #2196F3 0%, #0b7dda 100%);
+      color: #fff;
+      border-color: #00ffff;
+      box-shadow: 0 0 20px rgba(33, 150, 243, 0.5);
+    }
+
+    .gameover-btn-menu:hover {
+      transform: translateY(-5px) scale(1.08);
+      box-shadow: 0 8px 30px rgba(33, 150, 243, 0.8);
+    }
+
+    .gameover-btn-menu:active {
+      transform: translateY(-2px) scale(1.03);
+    }
+
+    .button-icon {
+      margin-right: 8px;
+      font-size: 20px;
+    }
+
+    @media (max-width: 768px) {
+      .pause-content {
+        padding: 30px 20px;
+      }
+
+      .pause-content h1 {
+        font-size: 36px;
+        margin-bottom: 30px;
+      }
+
+      .pause-btn {
+        padding: 15px 30px;
+        font-size: 16px;
+      }
+
+      .gameover-content {
+        padding: 40px 25px;
+      }
+
+      .gameover-content h1 {
+        font-size: 52px;
+        margin-bottom: 8px;
+      }
+
+      .gameover-content h2 {
+        font-size: 22px;
+        margin-bottom: 6px;
+      }
+
+      .final-score {
+        font-size: 28px;
+        margin-bottom: 15px;
+      }
+
+      .stats-row {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-bottom: 15px;
+      }
+
+      .stat-box-value {
+        font-size: 18px;
+      }
+
+      .gameover-buttons {
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .gameover-btn {
+        padding: 14px 30px;
+        font-size: 16px;
+        min-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="game"></canvas>
+  <div class="hud">
+    <div class="hud-left">
+      <div class="hud-item">
+        <span>⭐ Score:</span>
+        <span class="hud-value" id="score">0</span>
+      </div>
+      <div class="hud-item">
+        <span id="combo">x1.0 COMBO</span>
+      </div>
+      <div class="hud-item">
+        <span>🏛️ Stage:</span>
+        <span class="hud-value" id="stage">1</span>
+      </div>
+      <div class="hud-item">
+        <span>🏆 High:</span>
+        <span class="hud-value" id="highscore">0</span>
+      </div>
+      <div class="hud-item">
+        <span>💰 Coins:</span>
+        <span class="hud-coins" id="sessionCoins">0</span>
+      </div>
+    </div>
+    <div class="hud-right">
+      <button id="pauseBtn">⏸ PAUSE</button>
+    </div>
+  </div>
+
+  <!-- Pause Modal -->
+  <div id="pauseModal" class="pause-modal">
+    <div class="pause-content">
+      <h1>⏸ PAUSED</h1>
+      <div class="pause-buttons">
+        <button class="pause-btn pause-btn-resume" onclick="resumeGame()">▶ RESUME</button>
+        <button class="pause-btn pause-btn-menu" onclick="goToMenu()">🏠 MAIN MENU</button>
+        <button class="pause-btn pause-btn-restart" onclick="restartGame()">🔄 RESTART</button>
+      </div>
+    </div>
+  </div>
+
+<!-- Game Over Modal -->
+<div id="gameOverModal" class="gameover-modal">
+  <div class="gameover-content">
+    <div class="gameover-header">
+      <h1>GAME OVER</h1>
+      <h2>⚠️ You Have Been Defeated!</h2>
+    </div>
+
+    <div class="gameover-stats">
+      <div class="final-score-label">FINAL SCORE</div>
+      <div class="final-score" id="gameOverScore">0</div>
+
+      <div class="stats-row">
+        <div class="stat-box">
+          <div class="stat-box-label">🐤 Minions Killed</div>
+          <div class="stat-box-value" id="gameOverMinions">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-label">👑 Bosses Defeated</div>
+          <div class="stat-box-value" id="gameOverBosses">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-label">💰 Coins Earned</div>
+          <div class="stat-box-value" id="gameOverCoins">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-label">📈 Stage Reached</div>
+          <div class="stat-box-value" id="gameOverStage">1</div>
+        </div>
+      </div>
+
+      <div class="high-score-section">
+        <div class="high-score-text">HIGH SCORE</div>
+        <div class="high-score-value" id="gameOverHighScore">0</div>
+        <div class="high-score-badge" id="newHighScoreBadge" style="display: none;">🏆 NEW RECORD! 🏆</div>
+      </div>
+    </div>
+
+    <div class="gameover-buttons">
+      <button class="gameover-btn gameover-btn-restart" onclick="restartGameFromGameOver()">
+        <span class="button-icon">🔄</span>RESTART GAME
+      </button>
+      <button class="gameover-btn gameover-btn-menu" onclick="goToMenuFromGameOver()">
+        <span class="button-icon">🏠</span>MAIN MENU
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="audio-loader.js"></script>
+<script src="audio-config.js"></script>
+<script src="audio-manager.js"></script>
+<script src="game.js"></script>
+</body>
+</html>

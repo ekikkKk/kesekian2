@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minion Chase - Loading</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #0f1724 0%, #07102a 100%);
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    /* Animated background */
+    .background {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #0f1724 0%, #07102a 50%, #1a0f2e 100%);
+      z-index: -1;
+      animation: gradientShift 6s ease-in-out infinite;
+    }
+
+    @keyframes gradientShift {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+
+    /* Container */
+    .loading-container {
+      text-align: center;
+      position: relative;
+      z-index: 1;
+      animation: fadeIn 0.6s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    /* Logo & Title */
+    .loading-header {
+      margin-bottom: 50px;
+    }
+
+    .loading-logo {
+      font-size: 72px;
+      margin-bottom: 20px;
+      animation: bounce 2s ease-in-out infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-20px); }
+    }
+
+    .loading-title {
+      font-size: 48px;
+      color: #00ffff;
+      text-shadow: 0 0 20px #00ffff, 0 0 40px #0088ff;
+      margin-bottom: 10px;
+      letter-spacing: 2px;
+    }
+
+    .loading-subtitle {
+      font-size: 16px;
+      color: #aabbcc;
+      text-shadow: 0 0 10px #00ffff;
+    }
+
+    /* Spinner */
+    .spinner-container {
+      margin: 40px 0;
+      position: relative;
+      height: 100px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .spinner {
+      position: relative;
+      width: 80px;
+      height: 80px;
+    }
+
+    .spinner-ring {
+      position: absolute;
+      border: 4px solid transparent;
+      border-radius: 50%;
+      animation: spinnerRotate 2s linear infinite;
+    }
+
+    .spinner-ring:nth-child(1) {
+      width: 80px;
+      height: 80px;
+      border-top-color: #00ffff;
+      border-right-color: #00ffff;
+      animation-duration: 1.5s;
+    }
+
+    .spinner-ring:nth-child(2) {
+      width: 60px;
+      height: 60px;
+      top: 10px;
+      left: 10px;
+      border-bottom-color: #00ff88;
+      border-left-color: #00ff88;
+      animation-duration: 2s;
+      animation-direction: reverse;
+    }
+
+    .spinner-ring:nth-child(3) {
+      width: 40px;
+      height: 40px;
+      top: 20px;
+      left: 20px;
+      border-top-color: #ffaa00;
+      border-bottom-color: #ffaa00;
+      animation-duration: 2.5s;
+    }
+
+    @keyframes spinnerRotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .center-dot {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      background: #00ffff;
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 15px #00ffff;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+      }
+      50% {
+        transform: translate(-50%, -50%) scale(1.4);
+        opacity: 0.7;
+      }
+    }
+
+    /* Progress Bar */
+    .progress-container {
+      margin: 40px auto;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .progress-bar-bg {
+      width: 100%;
+      height: 8px;
+      background: rgba(0, 255, 255, 0.1);
+      border-radius: 10px;
+      border: 2px solid #00ffff;
+      overflow: hidden;
+      box-shadow: 0 0 15px rgba(0, 255, 255, 0.3), inset 0 0 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #00ffff 0%, #00ff88 50%, #ffff00 100%);
+      width: 0%;
+      transition: width 0.3s ease;
+      box-shadow: 0 0 10px #00ffff, inset 0 0 5px rgba(255, 255, 255, 0.3);
+    }
+
+    .progress-text {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #aabbcc;
+    }
+
+    .progress-percentage {
+      color: #00ffff;
+      font-weight: bold;
+      font-size: 16px;
+    }
+
+    /* Tips Section */
+    .tips-container {
+      margin-top: 50px;
+      padding: 20px;
+      background: rgba(0, 255, 255, 0.1);
+      border: 2px solid #00ffff;
+      border-radius: 10px;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+      min-height: 80px;
+      animation: fadeInUp 0.8s ease-out;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .tips-title {
+      font-size: 14px;
+      color: #00ffff;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+
+    .tips-text {
+      font-size: 16px;
+      color: #ffff99;
+      line-height: 1.6;
+      text-shadow: 0 0 10px rgba(255, 255, 0, 0.3);
+      min-height: 30px;
+      animation: tipFade 0.5s ease-in-out;
+    }
+
+    @keyframes tipFade {
+      0% { opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    /* Status Message */
+    .status-message {
+      margin-top: 30px;
+      font-size: 12px;
+      color: #aabbcc;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      animation: blink 1.5s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .loading-title {
+        font-size: 36px;
+      }
+
+      .loading-logo {
+        font-size: 54px;
+      }
+
+      .spinner {
+        width: 60px;
+        height: 60px;
+      }
+
+      .spinner-ring:nth-child(1) {
+        width: 60px;
+        height: 60px;
+      }
+
+      .spinner-ring:nth-child(2) {
+        width: 40px;
+        height: 40px;
+        top: 10px;
+        left: 10px;
+      }
+
+      .spinner-ring:nth-child(3) {
+        width: 20px;
+        height: 20px;
+        top: 20px;
+        left: 20px;
+      }
+
+      .tips-container {
+        max-width: 90%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="background"></div>
+
+  <div class="loading-container">
+    <!-- Logo & Title -->
+    <div class="loading-header">
+      <div class="loading-logo">🎮</div>
+      <h1 class="loading-title">MINION CHASE</h1>
+      <p class="loading-subtitle">Loading Game Data...</p>
+    </div>
+
+    <!-- Spinner -->
+    <div class="spinner-container">
+      <div class="spinner">
+        <div class="spinner-ring"></div>
+        <div class="spinner-ring"></div>
+        <div class="spinner-ring"></div>
+        <div class="center-dot"></div>
+      </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress-container">
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progressBar"></div>
+      </div>
+      <div class="progress-text">
+        <span class="progress-percentage" id="progressPercent">0%</span> Loaded
+      </div>
+    </div>
+
+    <!-- Tips -->
+    <div class="tips-container">
+      <div class="tips-title">💡 Tip</div>
+      <div class="tips-text" id="tipsText">Loading resources...</div>
+    </div>
+
+    <!-- Status -->
+    <div class="status-message" id="statusMessage">Initializing...</div>
+  </div>
+
+  <script src="loading.js"></script>
+</body>
+</html>
